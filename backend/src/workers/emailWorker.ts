@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 import { pool } from "../db/database";
 
@@ -10,16 +11,8 @@ const redisConnection = new IORedis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: null,
 });
 
-const transporter = nodemailer.createTransport({
-  host: process.env.ETHEREAL_HOST || "smtp.ethereal.email",
-  port: Number(process.env.ETHEREAL_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.ETHEREAL_USER,
-    pass: process.env.ETHEREAL_PASSWORD,
-  },
-});
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 const worker = new Worker(
   "emailQueue",
   async (job) => {
@@ -53,13 +46,17 @@ const worker = new Worker(
     );
 
     try {
-      const info = await transporter.sendMail({
-        from: `"Queuora" <${emailJob.sender_email || process.env.ETHEREAL_USER}>`,
-        to: emailJob.recipient,
-        subject: emailJob.subject,
-        text: emailJob.body,
-      });
+     
+const { data: info, error } = await resend.emails.send({
+  from: "Queuora <onboarding@resend.dev>",
+  to: [emailJob.recipient],
+  subject: emailJob.subject,
+  text: emailJob.body,
+});
 
+if (error) {
+  throw new Error(error.message);
+}
       await pool.query(
         `
         UPDATE email_jobs
@@ -72,17 +69,12 @@ const worker = new Worker(
         [emailJobId]
       );
 
-      console.log("✅ Email sent!");
-      console.log("Message ID:", info.messageId);
-      console.log(
-        "Preview URL:",
-        nodemailer.getTestMessageUrl(info)
-      );
+      console.log("Email sent successfully!");
+console.log("Message ID:", info?.id);
 
-      return {
-        messageId: info.messageId,
-        previewUrl: nodemailer.getTestMessageUrl(info),
-      };
+return {
+  messageId: info?.id,
+};
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
