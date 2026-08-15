@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://queuora-db.onrender.com";
 
 type User = {
   name: string;
