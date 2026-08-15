@@ -6,12 +6,9 @@ import { pool } from "../db/database";
 
 dotenv.config();
 
-const redisConnection = new IORedis(
-  process.env.REDIS_URL || "redis://127.0.0.1:6379",
-  {
-    maxRetriesPerRequest: null,
-  }
-);
+const redisConnection = new IORedis(process.env.REDIS_URL!, {
+  maxRetriesPerRequest: null,
+});
 
 const transporter = nodemailer.createTransport({
   host: process.env.ETHEREAL_HOST || "smtp.ethereal.email",
