@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_URL = "https://queuelet-backend.onrender.com";
+const API_URL = "https://queuora-db.onrender.com";
 
 type User = {
   name: string;
